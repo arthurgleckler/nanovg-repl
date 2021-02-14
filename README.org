@@ -29,6 +29,11 @@ I've only tested NanoVG-REPL on *Linux* and *MacOS*.  At least one
 part of the Scheme wrapper, ~make-fifo~, needs porting to work on
 Windows.
 
+[[https://arthurgleckler.github.io/nanovg-repl/stomachion.gif][https://arthurgleckler.github.io/nanovg-repl/stomachion.gif]]
+
+The animation above shows Stomachion, one of the demos in the
+~examples/~ directory.
+
 * How to Build It
 
 - NanoVG and NanoVG-REPL must be in peer directories, i.e. in
