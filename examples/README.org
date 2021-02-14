@@ -1,0 +1,3 @@
+The Stomachion example uses a subset of the Bold variant of the [[https://fonts.google.com/specimen/GFS+Neohellenic][GFS
+Neohellenic font]].  I used [[https://transfonter.org/][Transfonter]] to create a subset that contains
+only the characters that are used.  Please see [[./OFL.txt][the license file]].

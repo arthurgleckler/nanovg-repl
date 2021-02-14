@@ -1,0 +1,529 @@
+#+TITLE: NanoVG-REPL
+#+OPTIONS: author:nil html-postamble:nil num:0 toc:t
+
+NanoVG-REPL is a simple wrapper around [[https://github.com/memononen/nanovg][NanoVG]], a /small antialiased
+vector graphics rendering library for OpenGL/.  It makes NanoVG's API
+accessible through a simple text protocol.  In other words,
+NanoVG-REPL provides a [[https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop][Read-Eval-Print Loop]] for running NanoVG
+commands.  You can easily use it from any programming language.  Just
+make your program send commands to ~stdout~, read responses from
+~stdin~, and listen for asychronous events (e.g. keyboard and mouse
+events) on a named pipe.
+
+Communicating with the graphics system over pipes is not as fast as
+making direct foreign function calls.  However, for simple animations,
+it's easy to reach more than 200 frames per second on modern hardware
+this way.  For many applications, the benefits of isolating C code
+into a separate process and using a simple, portable text protocol
+outweigh the drawbacks.  It's easy to experiment, so it's a great way
+to get started on a new idea.  The graphics primitives are universal,
+so if performance becomes an issue, it should be possible to port your
+program to another, faster system.
+
+NanoVG-REPL includes a wrapper that makes it accessible from Scheme.
+It has been ported to [[http://synthcode.com/wiki/chibi-scheme][Chibi Scheme]] and [[https://www.gnu.org/software/mit-scheme/][MIT/GNU Scheme]].  Porting it to
+other Schemes — or even other languages — should be straightforward.
+
+While NanoVG itself is known to work on Linux, MacOS, and Windows,
+I've only tested NanoVG-REPL on *Linux* and *MacOS*.  At least one
+part of the Scheme wrapper, ~make-fifo~, needs porting to work on
+Windows.
+
+* How to Build It
+
+- NanoVG and NanoVG-REPL must be in peer directories, i.e. in
+  directories that have the same parent directory.
+- [[https://premake.github.io/][Premake4]] must be installed.
+- All the dependencies NanoVG requires for your platform, e.g. [[https://www.glfw.org/][GLFW]]
+  and OpenGL, must be installed.
+- Build NanoVG:
+  #+begin_src sh
+  cd ~/project/nanovg/
+  premake4 gmake   # For Linux.  See Premake documentation for other platforms.
+  cd build/
+  make nanovg
+  #+end_src
+- Build NanoVG-REPL:
+  #+begin_src sh
+  cd ~/project/nanovg-repl/
+  premake4 gmake   # For Linux.  See Premake documentation for other platforms.
+  cd build/
+  make repl
+  #+end_src
+
+* Examples
+
+To get an idea for how NanoVG-REPL works, take a look at these
+examples, which are written as ~bash~ shell scripts in order to prove
+that they're entirely portable even to least-common-denominator
+languages:
+
+- ~image.sh~, which displays a rotating image
+- ~moire.sh~, which displays a flashing [[https://en.wikipedia.org/wiki/Moir%C3%A9_pattern][Moiré pattern]]
+- ~stomachion.sh~, which displays a rotating [[https://en.wikipedia.org/wiki/Ostomachion][Ostomachion]] puzzle
+
+There are Scheme versions of each of those demos, too.
+
+- ~image.scm~
+- ~moire.scm~
+- ~stomachion.scm~
+
+** Chibi Scheme
+
+To run the Stomachion demo under Chibi Scheme:
+
+#+begin_src sh
+cd nanovg-repl/
+chibi-scheme \
+  -I src/ \
+  -I examples/ \
+  -x '(stomachion)' \
+  -e '(stomachion ".")'
+#+end_src
+
+To run the Image demo under Chibi Scheme:
+
+#+begin_src sh
+cd nanovg-repl/
+chibi-scheme \
+  -I src/ \
+  -I examples/ \
+  -x '(image)' \
+  -e '(image-demo ".")'
+#+end_src
+
+To run the Moire demo under Chibi Scheme:
+
+#+begin_src sh
+cd nanovg-repl/
+chibi-scheme \
+  -I src/ \
+  -I examples/ \
+  -x '(moire)' \
+  -e '(moire ".")'
+#+end_src
+
+** MIT/GNU Scheme
+
+To run the demos under MIT/GNU Scheme, first:
+
+#+begin_src sh
+cd nanovg-repl/
+scheme
+#+end_src
+
+Then, for the Stomachion demo:
+
+#+begin_src scheme
+(load "src/nanovg-repl.scm")
+(load "examples/stomachion.scm")
+(stomachion ".")
+#+end_src
+
+For the Image demo:
+
+#+begin_src scheme
+(load "src/nanovg-repl.scm")
+(load "examples/image.scm")
+(image-demo ".")
+#+end_src
+
+For the Moire demo:
+
+#+begin_src scheme
+(load "src/nanovg-repl.scm")
+(load "examples/moire.scm")
+(moire ".")
+#+end_src
+
+* Protocol
+
+The NanoVG-REPL protocol follows NanoVG's API closely, but not
+exactly.  There are NanoVG commands for most NanoVG functions, but
+some are omitted.  Some commands don't correspond to any NanoVG
+function, e.g. commands for turning on and off delivery of keyboard,
+mouse, and window events.
+
+** command line
+
+Before your program begins sending commands to NanoVG-REPL, it must
+start the ~repl~ program, passing it the desired initial window width
+and height, the window title, and the filename of a named pipe that
+you have already created.  The pipe will be used to deliver
+[[events][asynchronous events]] to your program.
+
+#+begin_quote
+~repl~ /initial-window-width/ /initial-window-height/ /window-title/
+/events-filename/
+#+end_quote
+
+For example:
+
+#+begin_src sh
+rm -f /tmp/nanovg-repl-events
+mkfifo -m 600 /tmp/nanovg-repl-events
+repl 1024 768 "Hello, world." /tmp/nanovg-repl-events
+#+end_src
+
+** communicating with the NanoVG-REPL process
+
+Once the NanoVG-REPL subprocess has been started, it displays its
+window.  The subprocess will accept commands, one per line, on
+~stdin~.  Any return values for a command will be printed on a single
+line on ~stdout~.
+
+Any [[events][asynchronous events]], including keyboard or mouse input or
+notification of window size changes, will be delivered on the named
+pipe /events-filename/.  (See [[command line][command line]].)  The caller should make
+sure to read that named pipe frequently so that it can act on those
+events.
+
+The subprocess will continue running until either an error occurs or
+the ~shutdown~ command is invoked.  When either of those happens, the
+subprocess will close the window and exit.
+
+** types
+
+Each command takes specific argument types, separated by spaces.  Each
+type is represented using its standard textual representation from C's
+~printf~.  The types are:
+
+- ~byte~ (C ~unsigned char~)
+
+  Boolean values are represented by ~byte~.  ~1~ is true, and ~0~ is
+  false.
+- ~float~
+
+  For example:
+
+  #+begin_src ascii
+  3.14159265359
+  #+end_src
+
+- ~int~
+
+  For example:
+
+  #+begin_src ascii
+  -123
+  #+end_src
+
+- ~string~ (C ~char *~)
+
+  Strings are delivered as two values: a byte count, followed by a
+  space, followed by the bytes that make up the string.  For example:
+
+  #+begin_src ascii
+  13 Hello, world.
+  #+end_src
+
+When the NanoVG protocol expects a color, it is broken down into the
+four RGBA components, each as a separate argument.  In most cases,
+each is a ~byte~.  For example, here's a translucent green:
+
+#+begin_src ascii
+0 255 0 127
+#+end_src
+
+The ~float~ and ~int~ types are also used for return values.  Some
+commands return more than one value, or an array of values.  For
+example, ~current-transform~ returns six floats, which are listed as
+~float[6]~ in the documentation, and might appear like this in a
+response:
+
+#+begin_src ascii
+1.000000 0.000000 0.000000 1.000000 0.000000 0.000000
+#+end_src
+
+** registered return values
+
+Some NanoVG functions return paint values (~NVGpaint~).  The
+corresponding commands register the value in a table, then return an
+ID instead.  When the caller is finished with a paint value, it must
+invoke ~unregister~ on the value's ID.  This allows NanoVG-REPL to
+reclaim the corresponding memory.
+
+There are other return values that are IDs, e.g. font IDs and image
+IDs, but ~unregister~ is only used for paint values.
+
+The ~delete-image~ command is used to reclaim the memory used by an
+image.
+
+** commands
+
+Each command below is listed with its arguments and their types.  If
+the command returns any values, they are listed after the "→" arrow.
+Except where noted, each command does the same thing as the similarly
+named NanoVG function.
+
+- ~add-fallback-font~ string /base-font/, string /fallback-font/
+- ~add-fallback-font-id~ int /base-font/, int /fallback-font/
+- ~arc~ float /cx/, float /cy/, float /r/, float /a0/, float /a1/, int
+  /dir/
+- ~arc-to~ float /x1/, float /y1/, float /x2/, float /y2/, float
+  /radius/
+- ~begin-frame~ float /window-width/, float /window-height/, float
+  /device-pixel-ratio/
+- ~begin-path~
+- ~bezier-to~ float /c1x/, float /c1y/, float /c2x/, float /c2y/, float
+  /x/, float /y/
+- ~box-gradient~ float /x/, float /y/, float /w/, float /h/, float /r/,
+  float /f/, byte /icolr/, byte /icolg/, byte /icolb/, byte /icola/,
+  byte /ocolr/, byte /ocolg/, byte /ocolb/, byte /ocola/ → int
+  /paint-id/
+- ~circle~ float /cx/, float /cy/, float /r/
+- ~clear~ byte /color-buffer-bit/, byte /depth-buffer-bit/, byte
+  /stencil-buffer-bit/
+
+  This command corresponds to ~glClear~.  Each byte is a Boolean value
+  representing whether that bit is turned on.
+- ~clear-color~ float /r/, float /g/, float /b/, float /a/
+- ~close-path~
+- ~close-window~
+
+  This command corresponds to ~glfwSetWindowShouldClose~ with
+  ~GL_TRUE~.
+- ~create-font~ string /name/, string /filename/ → int /font-id/
+- ~create-font-at-index~ string /name/, string /filename/, int /index/
+  → int /font-id/
+- ~create-image~ string /filename/, int /image-flags/ → int /image-id/
+- ~current-transform~ → float[6] /transform/
+- ~delete-image~ int /image/
+- ~ellipse~ float /cx/, float /cy/, float /rx/, float /ry/
+- ~end-frame~
+- ~fill~
+- ~fill-color~ byte /r/, byte /g/, byte /b/, byte /a/
+- ~fill-paint~ int /paint-id/
+- ~find-font~ string /name/ → int /font-id/
+- ~font-blur~ float /blur/
+- ~font-face~ string /font/
+- ~font-face-id~ int /font/
+- ~font-size~ float /size/
+- ~frame-buffer-size~ → int /fb-width/, int /fb-height/
+
+  This command corresponds to ~glfwGetFramebufferSize~.
+- ~global-alpha~ float /alpha/
+- ~image-pattern~ float /cx/, float /cy/, float /w/, float /h/, float
+  /angle/, int /image/, float /alpha/ → int /paint-id/
+- ~image-size~ int /image/ → int /w/, int /h/
+- ~intersect-scissor~ float /x/, float /y/, float /w/, float /h/
+- ~key-input-events~ byte /on/
+
+  This command turns delivery of key input events on or off.  It
+  corresponds to ~glfwSetKeyCallback~.
+- ~linear-gradient~ float /sx/, float /sy/, float /ex/, float /ey/,
+  byte /icolr/, byte /icolg/, byte /icolb/, byte /icola/, byte
+  /ocolr/, byte /ocolg/, byte /ocolb/, byte /ocola/ → int /paint-id/
+- ~line-cap~ int /cap/
+- ~line-join~ int /join/
+- ~line-to~ float /x/, float /y/
+- ~miter-limit~ float /limit/
+- ~mouse-button-events~ byte /on/
+
+  This command turns delivery of mouse button events on or off.  It
+  corresponds to ~glfwSetMouseButtonCallback~.
+- ~mouse-position-events~ byte /on/
+
+  This command turns delivery of mouse position events on or off.  It
+  corresponds to ~glfwSetCursorPosCallback~.
+- ~move-to~ float /x/, float /y/
+- ~path-winding~ int /dir/
+- ~ping~ string /string/
+- ~poll-events~
+
+  This command corresponds to ~glfwPollEvents~.
+- ~quad-to~ float /cx/, float /cy/, float /x/, float /y/
+- ~radial-gradient~ float /cx/, float /cy/, float /inr/, float /outr/,
+  byte /icolr/, byte /icolg/, byte /icolb/, byte /icola/, byte
+  /ocolr/, byte /ocolg/, byte /ocolb/, byte /ocola/ → int /paint-id/
+- ~rect~ float /x/, float /y/, float /w/, float /h/
+- ~reset~
+- ~reset-fallback-fonts~ string /base-font/
+- ~reset-fallback-fonts-id~ int /base-font/
+- ~reset-scissor~
+- ~reset-transform~
+- ~restore~
+- ~rotate~ float /angle/
+- ~rounded-rect~ float /x/, float /y/, float /w/, float /h/, float /r/
+- ~rounded-rect-varying~ float /x/, float /y/, float /w/, float /h/,
+  float /rad-top-left/, float /rad-top-right/, float /rad-bottom-right/,
+  float /rad-bottom-left/
+- ~save~
+- ~scale~ float /x/, float /y/
+- ~scissor~ float /x/, float /y/, float /w/, float /h/
+- ~shape-anti-alias~ int /enabled/
+- ~shutdown~
+
+  This command closes the NanoVG-REPL window and exits its process.
+- ~skew-x~ float /angle/
+- ~skew-y~ float /angle/
+- ~stroke~
+- ~stroke-color~ byte /r/, byte /g/, byte /b/, byte /a/
+- ~stroke-paint~ int /paint-id/
+- ~stroke-width~ float /width/
+- ~swap-buffers~
+
+  This command correpsonds to ~glfwSwapBuffers~.
+- ~text~ float /x/, float /y/, string /string/ → float /result/
+- ~text-align~ int /align/
+- ~text-bounds~ float /x/, float /y/, string /string/ → float /result/,
+  float[4] /bounds/
+- ~text-box~ float /x/, float /y/, float /break-row-width/, string
+  /string/
+- ~text-box-bounds~ float /x/, float /y/, float /break-row-width/, string
+  /string/ → float[4] bounds
+- ~text-input-events~ byte /on/
+
+  This command turns delivery of text input events on or off.  It
+  corresponds to ~glfwSetCharCallback~.
+- ~text-letter-spacing~ float /spacing/
+- ~text-line-height~ float /line-height/
+- ~text-metrics~ → float /ascender/, float /descender/, float /lineh/
+- ~transform~ float /a/, float /b/, float /c/, float /d/, float /e/,
+  float /f/
+- ~translate~ float /x/, float /y/
+- ~unregister~ int /id/
+
+  This command is used to free memory associated with paint objects
+  returned by other commands.
+- ~viewport~ int /x/, int /y/, int /w/, int /h/
+
+  This corresponds to ~glViewport~.
+- ~window-size~ → int /window-width/, int /win-height/
+
+  This command corresponds to ~glfwGetWindowSize~.
+- ~window-should-close?~
+
+  This command corresponds to ~glfwWindowShouldClose~.
+- ~window-size-change-events~ byte /on/
+
+  This command corresponds to ~glfwSetWindowSizeCallback~.
+
+** events
+
+Asynchronous events are delivered on the named pipe /events-filename/.
+Events are encoded like commands, with spaces separating their
+arguments.
+
+- ~key-input~ int /key/, int /code/, int /mods/
+
+  This event corresponds to the callback set by ~glfwSetKeyCallback~.
+  Only key presses, not releases, are delivered.
+- ~mouse-button~ int /button/, int /action/, int /mods/
+
+  This event corresponds to the callback set by
+  ~glfwSetMouseButtonCallback~.
+- ~mouse-position~ float /xpos/, float /ypos/
+
+  This event corresponds to the callback set by
+  ~glfwSetCursorPosCallback~.
+- ~text-input~ int /code-point/
+
+  This event corresponds to the callback set by
+  ~glfwSetCharCallback~.
+- ~window-size-changed~ int /width/, int /height/
+
+  This event corresponds to the callback set by
+  ~glfwSetWindowSizeCallback~.
+
+* Scheme API
+
+The Scheme API for NanoVG-REPL corresponds closely to the protocol
+described above.  There is a procedure corresponding to each command
+listed [[commands][above]].
+
+** types
+
+The argument types and return types of the procedures are the same as
+those of the corresponding commands except that the following
+procedures take a Scheme Boolean value instead of a ~1~ or ~0~:
+
+- ~key-input-events~
+- ~mouse-button-events~
+- ~mouse-position-events~
+- ~text-input-events~
+- ~window-size-change-events~
+
+and the ~window-should-close?~ procedure returns a Boolean.
+
+** creating a window
+
+To create a window using the Scheme API, call ~make-nanovg-window~.
+It takes the pathname of the ~repl~ program, an initial width and
+height, and a window title:
+
+#+begin_quote
+(~make-nanovg-window~ /repl-pathname/ /initial-window-width/ /initial-window-height/ /window-title/)
+#+end_quote
+
+For example:
+
+#+begin_src scheme
+(make-nanovg-window "nanovg-repl/build/repl" 800 800 "Example Window Title")
+#+end_src
+
+** current window
+
+Most procedures in the Scheme API take an implicit parameter, the
+current window.  This is set in a dynamic scope using Scheme's
+standard ~parameter~ syntax.  For example:
+
+#+begin_src scheme
+  (parameterize ((current-nanovg-window (make-nanovg-window ...)))
+    do-something)
+#+end_src
+
+** dispatching events
+
+In order for programs to handle events, they must check for them at
+least periodically.  This can be done in a separate thread, or it can
+be done by checking frequently in the same thread in which drawing
+occurs.
+
+To read an event, call ~read-nanovg-event~.  It returns two values:
+the event name and a list of the event's arguments.  If there is no
+event ready, it returns ~#f~ for both.
+
+For convenience, ~dispatch-event~ can be used instead.  It provides a
+simple way to declare what should be done if no event is ready, what
+should be done for each possible event type, and what should be done
+in every other case.
+
+#+begin_src example
+(dispatch-event [(no-events action ...)]
+                ((event-name) action ...) ...
+                [(else action ...)])
+#+end_src
+
+For example:
+
+#+begin_src scheme
+  (dispatch-event (no-events #f)
+                  ((mouse-button button action mods) '(click))
+                  ((mouse-position xpos ypos) `(position ,xpos ,ypos))
+                  (else (error "Unexpected event.")))
+#+end_src
+
+** cleanup
+
+When ~make-nanovg-window~ is called to create a window, it creates a
+named pipe as well.  Once the current NanoVG-REPL window has been
+closed using ~shutdown~, it's good to delete that named pipe.  There
+are two ways to do that: manual and automatic.  To delete it manually,
+call ~delete-nanovg-fifo~.  To delete it automatically, wrap all the
+code using the window in ~nanovg-cleanup~:
+
+#+begin_src scheme
+  (parameterize ((current-nanovg-window
+                  (make-nanovg-window repl-pathname
+                                      width
+                                      height
+                                      "Example Window Title")))
+    (nanovg-cleanup
+     (lambda ()
+       ;; ... Use the window.
+       )))
+#+end_src
+
+When ~nanovg-cleanup~ returns, even due to an error, it will delete
+the named pipe.
