@@ -58,7 +58,7 @@ The animation above shows Stomachion, one of the demos in the
 
 * Examples
 
-To get an idea for how NanoVG-REPL works, take a look at these
+To get an idea of how NanoVG-REPL works, take a look at these
 examples, which are written as ~bash~ shell scripts in order to prove
 that they're entirely portable even to least-common-denominator
 languages:
@@ -493,7 +493,7 @@ For example:
 
 Most procedures in the Scheme API take an implicit parameter, the
 current window.  This is set in a dynamic scope using Scheme's
-standard ~parameter~ syntax.  For example:
+standard ~parameterize~ syntax.  For example:
 
 #+begin_src scheme
   (parameterize ((current-nanovg-window (make-nanovg-window ...)))
