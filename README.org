@@ -67,11 +67,33 @@ languages:
 - ~moire.sh~, which displays a flashing [[https://en.wikipedia.org/wiki/Moir%C3%A9_pattern][Moiré pattern]]
 - ~stomachion.sh~, which displays a rotating [[https://en.wikipedia.org/wiki/Ostomachion][Ostomachion]] puzzle
 
-There are Scheme versions of each of those demos, too.
+There are Scheme versions of each of those demos, too:
 
 - ~image.scm~
 - ~moire.scm~
 - ~stomachion.scm~
+
+** ~bash~
+
+To run the Stomachion demo under ~bash~:
+
+#+begin_src sh
+cd nanovg-repl/examples/ && ./stomachion.sh
+#+end_src
+
+To run the Image demo under ~bash~:
+
+#+begin_src sh
+cd nanovg-repl/examples/ && ./image.sh
+#+end_src
+
+#+RESULTS:
+
+To run the Moire demo under ~bash~:
+
+#+begin_src sh
+cd nanovg-repl/examples/ && ./moire.sh
+#+end_src
 
 ** Chibi Scheme
 

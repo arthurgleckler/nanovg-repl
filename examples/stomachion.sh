@@ -237,7 +237,7 @@ mkfifo -m 600 $PRIVATE/responses
 
 stomachion \
   < $PRIVATE/responses \
-  | ./repl \
+  | ../build/repl \
       $WIDTH \
       $HEIGHT \
       Stomachion \

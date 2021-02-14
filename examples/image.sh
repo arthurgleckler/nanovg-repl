@@ -101,7 +101,7 @@ mkfifo -m 600 $PRIVATE/responses
 
 image \
   < $PRIVATE/responses \
-  | ./repl \
+  | ../build/repl \
       $WIDTH \
       $HEIGHT \
       image \

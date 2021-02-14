@@ -67,7 +67,7 @@ mkfifo -m 600 $PRIVATE/responses
 
 moire \
   < $PRIVATE/responses \
-  | ./repl \
+  | ../build/repl \
       800 \
       800 \
       Moire \
