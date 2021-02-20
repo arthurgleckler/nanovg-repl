@@ -163,6 +163,31 @@ For the Moire demo:
 (moire ".")
 #+end_src
 
+In MIT Scheme that include commit ~adab6b864~ (added 2021-02-19), you
+can use R7RS libraries instead:
+
+#+begin_src scheme
+(find-scheme-libraries! ".")
+,(import (image))
+(image-demo ".")
+#+end_src
+
+or:
+
+#+begin_src scheme
+(find-scheme-libraries! ".")
+,(import (moire))
+(moire ".")
+#+end_src
+
+or:
+
+#+begin_src scheme
+(find-scheme-libraries! ".")
+,(import (stomachion))
+(stomachion ".")
+#+end_src
+
 * Protocol
 
 The NanoVG-REPL protocol follows NanoVG's API closely, but not
