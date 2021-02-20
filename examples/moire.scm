@@ -5,9 +5,7 @@
 ;;;; See MIT license in "LICENSE" file.
 
 (cond-expand
- (mit (declare (usual-integrations))
-      (define (path-resolve path directory)
-	(enough-namestring (merge-pathnames path directory)))))
+ (mit (declare (usual-integrations))))
 
 (define (moire repl-root)
   (let ((repl-pathname (path-resolve "build/repl" repl-root))

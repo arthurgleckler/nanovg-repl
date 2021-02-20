@@ -5,9 +5,7 @@
 ;;;; See MIT license in "LICENSE" file.
 
 (cond-expand
- (mit (declare (usual-integrations))
-      (define (path-resolve path directory)
-	(enough-namestring (merge-pathnames path directory)))))
+ (mit (declare (usual-integrations))))
 
 (define (line-segments x0 y0 x1 y1 . rest)
   (move-to x0 y0)
