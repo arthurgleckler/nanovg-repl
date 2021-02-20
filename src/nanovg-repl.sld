@@ -22,8 +22,7 @@
                   subprocess-id
                   subprocess-input-port
                   subprocess-output-port
-                  unspecific
-                  ))))
+                  unspecific))))
   (import (scheme base))
   (import (scheme file))
   (import (scheme read))
