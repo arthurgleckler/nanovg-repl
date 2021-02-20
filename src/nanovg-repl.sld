@@ -8,13 +8,28 @@
   (cond-expand
    (chibi
     (import (chibi process))
-    (import (chibi temp-file))
-    (import (srfi 125))
-    (import (srfi 128))))
+    (import (chibi temp-file)))
+   (mit
+    (import (only (mit legacy runtime)
+                  assert
+                  call-with-temporary-file-pathname
+                  enough-namestring
+                  identifier?
+                  load-option
+                  run-synchronous-subprocess
+                  scheme-subprocess-environment
+                  start-pipe-subprocess
+                  subprocess-id
+                  subprocess-input-port
+                  subprocess-output-port
+                  unspecific
+                  ))))
   (import (scheme base))
   (import (scheme file))
   (import (scheme read))
   (import (scheme write))
+  (import (srfi 125))
+  (import (srfi 128))
   (export delete-nanovg-fifo
 	  dispatch-event
 	  make-nanovg-window

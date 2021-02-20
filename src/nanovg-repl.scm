@@ -10,14 +10,7 @@
     (when (not boolean) (apply error error-arguments)))
   (define unspecific 'unspecific))
  (mit
-  (declare (usual-integrations))
   (load-option 'synchronous-subprocess)))
-
-(cond-expand
- (chibi
-  (define (make-eq-hash-table)
-    (make-hash-table (make-eq-comparator))))
- (mit #f))				; This works around a bug in MIT Scheme.
 
 ;;; Window
 
@@ -171,7 +164,8 @@
 
 ;;; Read and handle events.
 
-(define event-reader-table (make-eq-hash-table))
+(define event-reader-table
+  (make-hash-table (make-eq-comparator)))
 
 (define-syntax define-event
   (syntax-rules ()
