@@ -139,26 +139,28 @@ cd nanovg-repl/
 scheme
 #+end_src
 
+Then, for the Stomachion demo:
+
+#+begin_src scheme
+(find-scheme-libraries! ".")
+,(import (stomachion))
+(stomachion ".")
+#+end_src
+
+or for the Image demo:
+
 #+begin_src scheme
 (find-scheme-libraries! ".")
 ,(import (image))
 (image-demo ".")
 #+end_src
 
-or:
+or for the Moire demo:
 
 #+begin_src scheme
 (find-scheme-libraries! ".")
 ,(import (moire))
 (moire ".")
-#+end_src
-
-or:
-
-#+begin_src scheme
-(find-scheme-libraries! ".")
-,(import (stomachion))
-(stomachion ".")
 #+end_src
 
 * Protocol
