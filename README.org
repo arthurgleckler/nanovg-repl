@@ -132,39 +132,12 @@ chibi-scheme \
 
 ** MIT/GNU Scheme
 
-To run the demos under MIT/GNU Scheme, first:
+To run the demos under MIT/GNU Scheme version 11.2 and later, first:
 
 #+begin_src sh
 cd nanovg-repl/
 scheme
 #+end_src
-
-Then, for the Stomachion demo:
-
-#+begin_src scheme
-(load "src/nanovg-repl.scm")
-(load "examples/stomachion.scm")
-(stomachion ".")
-#+end_src
-
-For the Image demo:
-
-#+begin_src scheme
-(load "src/nanovg-repl.scm")
-(load "examples/image.scm")
-(image-demo ".")
-#+end_src
-
-For the Moire demo:
-
-#+begin_src scheme
-(load "src/nanovg-repl.scm")
-(load "examples/moire.scm")
-(moire ".")
-#+end_src
-
-In MIT Scheme that include commit ~adab6b864~ (added 2021-02-19), you
-can use R7RS libraries instead:
 
 #+begin_src scheme
 (find-scheme-libraries! ".")
