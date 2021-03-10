@@ -15,7 +15,6 @@
                   call-with-temporary-file-pathname
                   enough-namestring
                   identifier?
-                  load-option
                   run-synchronous-subprocess
                   scheme-subprocess-environment
                   start-pipe-subprocess

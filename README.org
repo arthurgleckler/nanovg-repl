@@ -139,10 +139,14 @@ cd nanovg-repl/
 scheme
 #+end_src
 
+#+begin_src scheme
+(load-option 'synchronous-subprocess)
+(find-scheme-libraries! ".")
+#+end_src
+
 Then, for the Stomachion demo:
 
 #+begin_src scheme
-(find-scheme-libraries! ".")
 ,(import (stomachion))
 (stomachion ".")
 #+end_src
@@ -150,7 +154,6 @@ Then, for the Stomachion demo:
 or for the Image demo:
 
 #+begin_src scheme
-(find-scheme-libraries! ".")
 ,(import (image))
 (image-demo ".")
 #+end_src
@@ -158,7 +161,6 @@ or for the Image demo:
 or for the Moire demo:
 
 #+begin_src scheme
-(find-scheme-libraries! ".")
 ,(import (moire))
 (moire ".")
 #+end_src

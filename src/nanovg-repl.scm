@@ -7,10 +7,8 @@
 (cond-expand
  (chibi
   (define (assert boolean . error-arguments)
-    (when (not boolean) (apply error error-arguments)))
-  (define unspecific 'unspecific))
- (mit
-  (load-option 'synchronous-subprocess)))
+    (when (not boolean) (apply error error-arguments))))
+ (mit (define unspecific 'unspecific)))
 
 ;;; Window
 
