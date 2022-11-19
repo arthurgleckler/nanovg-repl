@@ -40,7 +40,11 @@ The animation above shows Stomachion, one of the demos in the
   directories that have the same parent directory.
 - [[https://premake.github.io/][Premake]] must be installed.
 - All the dependencies NanoVG requires for your platform, e.g. [[https://www.glfw.org/][GLFW]]
-  and OpenGL, must be installed.
+  and OpenGL, must be installed.  For example, on Linux:
+    #+begin_src sh
+    sudo apt install libglew-dev
+    sudo apt install libglfw3-dev
+    #+end_src
 - Build NanoVG:
   #+begin_src sh
   cd ~/project/nanovg/
