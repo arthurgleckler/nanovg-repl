@@ -38,20 +38,20 @@ The animation above shows Stomachion, one of the demos in the
 
 - NanoVG and NanoVG-REPL must be in peer directories, i.e. in
   directories that have the same parent directory.
-- [[https://premake.github.io/][Premake4]] must be installed.
+- [[https://premake.github.io/][Premake]] must be installed.
 - All the dependencies NanoVG requires for your platform, e.g. [[https://www.glfw.org/][GLFW]]
   and OpenGL, must be installed.
 - Build NanoVG:
   #+begin_src sh
   cd ~/project/nanovg/
-  premake4 gmake   # For Linux.  See Premake documentation for other platforms.
+  premake5 gmake   # For Linux.  See Premake documentation for other platforms.
   cd build/
   make nanovg
   #+end_src
 - Build NanoVG-REPL:
   #+begin_src sh
   cd ~/project/nanovg-repl/
-  premake4 gmake   # For Linux.  See Premake documentation for other platforms.
+  premake5 gmake   # For Linux.  See Premake documentation for other platforms.
   cd build/
   make repl
   #+end_src
